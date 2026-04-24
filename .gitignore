@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# Virtual environment
+travelist/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Django
+*.sqlite3
+migrations/
+
+# PyCharm
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
