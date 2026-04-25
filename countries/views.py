@@ -57,8 +57,7 @@ class CountryEntryListView(generics.ListCreateAPIView):
     GET  /api/my-countries/  — list user's tracked countries
     POST /api/my-countries/  — add a country
     """
-    def get_serializer_class(self):
-        return CountryEntrySerializer
+    serializer_class = CountryEntrySerializer
 
     def get_queryset(self):
         qs = CountryEntry.objects.filter(user=self.request.user).select_related('country')
@@ -135,6 +134,11 @@ class UserStatsView(APIView):
 
 
 class TravelItemListView(generics.ListCreateAPIView):
+    """
+    GET  /api/my-countries/<entry_id>/items/  — list items for a country entry
+    POST /api/my-countries/<entry_id>/items/  — add an item (landmark, food, etc.)
+    Supports ?category=food filtering.
+    """
     serializer_class = TravelItemSerializer
 
     def get_entry(self):
@@ -156,6 +160,11 @@ class TravelItemListView(generics.ListCreateAPIView):
 
 
 class TravelItemDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET    /api/items/<id>/  — get a single item
+    PATCH  /api/items/<id>/  — mark as done, edit notes
+    DELETE /api/items/<id>/  — remove item
+    """
     serializer_class = TravelItemSerializer
 
     def get_queryset(self):
@@ -164,6 +173,7 @@ class TravelItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_update(self, serializer):
         serializer.save()
         cache.delete(f'stats_{self.request.user.id}')
+
     def perform_destroy(self, instance):
         instance.delete()
         cache.delete(f'stats_{self.request.user.id}')
