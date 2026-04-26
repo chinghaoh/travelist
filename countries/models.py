@@ -49,6 +49,30 @@ class CountryEntry(models.Model):
     def __str__(self):
         return f"{self.user.username} — {self.country.name} ({self.get_status_display()})"
 
+class Region(models.Model):
+    TYPE_CHOICES = [
+        ('city', 'City'),
+        ('province', 'Province'),
+        ('region', 'Region'),
+        ('island', 'Island'),
+        ('other', 'Other'),
+    ]
+
+    country_entry = models.ForeignKey(
+        CountryEntry, on_delete=models.CASCADE, related_name='regions'
+    )
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='city')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = ('country_entry', 'name')
+
+    def __str__(self):
+        return f"{self.name} ({self.get_type_display()}) — {self.country_entry.country.name}"
+
 class TravelItem(models.Model):
     CATEGORY_CHOICES = [
         ('landmark', 'Landmark'),
@@ -61,6 +85,9 @@ class TravelItem(models.Model):
 
     country_entry = models.ForeignKey(
         CountryEntry, on_delete=models.CASCADE, related_name='items'
+    )
+    region = models.ForeignKey(
+        Region, on_delete=models.SET_NULL, null=True, blank=True, related_name='items'
     )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='landmark')
     name = models.CharField(max_length=200)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Country, CountryEntry, TravelItem
+from .models import Country, CountryEntry, TravelItem, Region
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -13,11 +13,37 @@ class CountrySerializer(serializers.ModelSerializer):
 
 class TravelItemSerializer(serializers.ModelSerializer):
     category_display = serializers.CharField(source='get_category_display', read_only=True)
+    region_name = serializers.SerializerMethodField()
 
     class Meta:
         model = TravelItem
-        fields = ['id', 'category', 'category_display', 'name', 'notes', 'is_done', 'created_at']
+        fields = ['id', 'category', 'category_display', 'name', 'notes', 'is_done', 'region', 'region_name', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+    def get_region_name(self, obj):
+        if obj.region:
+            return obj.region.name
+        return None
+
+
+class RegionSerializer(serializers.ModelSerializer):
+    type_display = serializers.CharField(source='get_type_display', read_only=True)
+    item_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Region
+        fields = ['id', 'name', 'type', 'type_display', 'notes', 'item_count', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+    def get_item_count(self, obj):
+        return obj.items.count()
+
+
+class RegionDetailSerializer(RegionSerializer):
+    items = TravelItemSerializer(many=True, read_only=True)
+
+    class Meta(RegionSerializer.Meta):
+        fields = RegionSerializer.Meta.fields + ['items']
 
 
 class CountryEntrySerializer(serializers.ModelSerializer):
@@ -56,6 +82,7 @@ class CountryEntrySerializer(serializers.ModelSerializer):
 
 class CountryEntryDetailSerializer(CountryEntrySerializer):
     items = TravelItemSerializer(many=True, read_only=True)
+    regions = RegionSerializer(many=True, read_only=True)
 
     class Meta(CountryEntrySerializer.Meta):
-        fields = CountryEntrySerializer.Meta.fields + ['items']
+        fields = CountryEntrySerializer.Meta.fields + ['items', 'region']

@@ -5,12 +5,14 @@ from django.core.cache import cache
 from .tasks import country_visited_task
 
 
-from .models import Country, CountryEntry, TravelItem
+from .models import Country, CountryEntry, TravelItem, Region
 from .serializers import (
     CountrySerializer,
     CountryEntrySerializer,
     CountryEntryDetailSerializer,
     TravelItemSerializer,
+    RegionSerializer,
+    RegionDetailSerializer
 )
 
 class CountryListView(generics.ListAPIView):
@@ -177,3 +179,42 @@ class TravelItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     def perform_destroy(self, instance):
         instance.delete()
         cache.delete(f'stats_{self.request.user.id}')
+
+
+class RegionListView(generics.ListCreateAPIView):
+    """
+    GET  /api/my-countries/<entry_id>/regions/  — list regions for a country entry
+    POST /api/my-countries/<entry_id>/regions/  — add a region
+    Supports ?type=city filtering.
+    """
+    serializer_class = RegionSerializer
+
+    def get_entry(self):
+        return generics.get_object_or_404(
+            CountryEntry, pk=self.kwargs['entry_id'], user=self.request.user
+        )
+
+    def get_queryset(self):
+        qs = Region.objects.filter(country_entry=self.get_entry())
+        type_filter = self.request.query_params.get('type')
+        if type_filter:
+            qs = qs.filter(type=type_filter)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(country_entry=self.get_entry())
+
+
+class RegionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    GET    /api/regions/<id>/  — get region with all items
+    PATCH  /api/regions/<id>/  — update region
+    DELETE /api/regions/<id>/  — delete region
+    """
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return RegionDetailSerializer
+        return RegionSerializer
+
+    def get_queryset(self):
+        return Region.objects.filter(country_entry__user=self.request.user)
