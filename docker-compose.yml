@@ -32,7 +32,7 @@ services:
 
   celery:
     build: .
-    command: celery -A travelist worker --loglevel=info --pool=solo
+    command: celery -A treklog worker --loglevel=info --pool=solo
     volumes:
       - .:/app
     env_file:

@@ -2,7 +2,7 @@
 .env
 
 # Virtual environment
-travelist/
+treklog/
 
 # Python
 __pycache__/
