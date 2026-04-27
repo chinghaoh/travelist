@@ -85,4 +85,4 @@ class CountryEntryDetailSerializer(CountryEntrySerializer):
     regions = RegionSerializer(many=True, read_only=True)
 
     class Meta(CountryEntrySerializer.Meta):
-        fields = CountryEntrySerializer.Meta.fields + ['items', 'region']
+        fields = CountryEntrySerializer.Meta.fields + ['items', 'regions']
