@@ -22,5 +22,7 @@ urlpatterns = [
 
     # Single region and item management
     path('regions/<int:pk>/', views.RegionDetailView.as_view(), name='region-detail'),
+    path('items/', views.RecentItemsView.as_view(), name='item-list-all'),
     path('items/<int:pk>/', views.TravelItemDetailView.as_view(), name='item-detail'),
+
 ]

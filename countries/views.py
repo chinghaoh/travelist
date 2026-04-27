@@ -180,6 +180,18 @@ class TravelItemDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance.delete()
         cache.delete(f'stats_{self.request.user.id}')
 
+class RecentItemsView(generics.ListAPIView):
+    """
+    GET /api/items/  — list all items for the current user, newest first
+    """
+    serializer_class = TravelItemSerializer
+
+    def get_queryset(self):
+        qs = TravelItem.objects.filter(
+            country_entry__user=self.request.user
+        ).order_by('-created_at')
+        return qs
+
 
 class RegionListView(generics.ListCreateAPIView):
     """
