@@ -64,7 +64,6 @@ class Region(models.Model):
     )
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='city')
-    notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     boundary = models.JSONField(null=True, blank=True)
 

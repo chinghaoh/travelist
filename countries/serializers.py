@@ -39,7 +39,7 @@ class RegionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Region
-        fields = ['id', 'name', 'type', 'type_display', 'notes', 'item_count', 'created_at']
+        fields = ['id', 'name', 'type', 'type_display', 'item_count', 'created_at']
         read_only_fields = ['id', 'created_at']
 
     def get_item_count(self, obj):
