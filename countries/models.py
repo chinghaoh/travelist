@@ -19,6 +19,7 @@ class Country(models.Model):
     flag_emoji = models.CharField(max_length=10, blank=True)
     capital = models.CharField(max_length=100, blank=True)
     region = models.CharField(max_length=100, blank=True)
+    numeric_code = models.CharField(max_length=3, null=True, blank=True)
 
     class Meta:
         ordering = ['name']
@@ -65,6 +66,7 @@ class Region(models.Model):
     type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='city')
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    boundary = models.JSONField(null=True, blank=True)
 
     class Meta:
         ordering = ['name']

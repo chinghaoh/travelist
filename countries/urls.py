@@ -16,6 +16,7 @@ urlpatterns = [
 
     # Regions within a country entry
     path('my-countries/<int:entry_id>/regions/', views.RegionListView.as_view(), name='region-list'),
+    path('my-countries/<int:entry_id>/regions/<int:region_id>/fetch-boundary/', views.RegionFetchBoundaryView.as_view(), name='region-fetch-boundary'),
 
     # Items within a country entry
     path('my-countries/<int:entry_id>/items/', views.TravelItemListView.as_view(), name='item-list'),

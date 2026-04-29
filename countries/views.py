@@ -1,8 +1,10 @@
 from rest_framework import generics, filters, status
-from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.core.cache import cache
 from .tasks import country_visited_task
+import requests
+from rest_framework import status
+from rest_framework.response import Response
 
 
 from .models import Country, CountryEntry, TravelItem, Region
@@ -230,3 +232,56 @@ class RegionDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return Region.objects.filter(country_entry__user=self.request.user)
+
+
+class RegionFetchBoundaryView(generics.GenericAPIView):
+    """
+    POST /api/my-countries/<entry_id>/regions/<region_id>/fetch-boundary/
+    Fetches region boundary from Nominatim and caches it in the DB.
+    Returns immediately if boundary already exists.
+    """
+
+    def get_region(self):
+        return generics.get_object_or_404(
+            Region,
+            pk=self.kwargs['region_id'],
+            country_entry__id=self.kwargs['entry_id'],
+            country_entry__user=self.request.user
+        )
+
+    def post(self, request, *args, **kwargs):
+        region = self.get_region()
+
+        # Return cached boundary if it exists
+        if region.boundary:
+            return Response({'boundary': region.boundary})
+
+        # Fetch from Nominatim
+        country_name = region.country_entry.country.name
+        query = f"{region.name}, {country_name}"
+
+        response = requests.get(
+            'https://nominatim.openstreetmap.org/search',
+            params={
+                'q': query,
+                'format': 'geojson',
+                'polygon_geojson': 1,
+                'polygon_threshold': 0.01,
+                'limit': 1,
+            },
+            headers={'User-Agent': 'Treklog/1.0'}
+        )
+
+        data = response.json()
+
+        if not data['features']:
+            return Response(
+                {'error': f'Boundary not found for {region.name}'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        boundary = data['features'][0]['geometry']
+        region.boundary = boundary
+        region.save()
+
+        return Response({'boundary': boundary})

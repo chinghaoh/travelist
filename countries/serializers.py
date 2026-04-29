@@ -8,17 +8,24 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ['id', 'name', 'iso_code', 'continent', 'continent_display',
-                  'flag_emoji', 'capital', 'region']
+                  'flag_emoji', 'capital', 'region', 'numeric_code']
 
 
 class TravelItemSerializer(serializers.ModelSerializer):
     category_display = serializers.CharField(source='get_category_display', read_only=True)
     region_name = serializers.SerializerMethodField()
+    country_name = serializers.CharField(source='country_entry.country.name', read_only=True)
+    country_iso = serializers.CharField(source='country_entry.country.iso_code', read_only=True)
+    country_entry_id = serializers.IntegerField(source='country_entry.id', read_only=True)
 
     class Meta:
         model = TravelItem
-        fields = ['id', 'category', 'category_display', 'name', 'notes', 'is_done', 'region', 'region_name', 'created_at']
+        fields = ['id', 'category', 'category_display', 'name', 'notes', 'is_done',
+                  'region', 'region_name', 'country_name', 'country_iso','country_entry_id','created_at']
         read_only_fields = ['id', 'created_at']
+
+    def get_region_name(self, obj):
+        return obj.region.name if obj.region else None
 
     def get_region_name(self, obj):
         if obj.region:
