@@ -93,7 +93,6 @@ class TravelItem(models.Model):
     )
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='landmark')
     name = models.CharField(max_length=200)
-    notes = models.TextField(blank=True)
     is_done = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

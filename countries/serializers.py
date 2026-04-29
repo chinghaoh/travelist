@@ -20,7 +20,7 @@ class TravelItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TravelItem
-        fields = ['id', 'category', 'category_display', 'name', 'notes', 'is_done',
+        fields = ['id', 'category', 'category_display', 'name', 'is_done',
                   'region', 'region_name', 'country_name', 'country_iso','country_entry_id','created_at']
         read_only_fields = ['id', 'created_at']
 
