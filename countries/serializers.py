@@ -60,17 +60,21 @@ class CountryEntrySerializer(serializers.ModelSerializer):
     )
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     item_count = serializers.SerializerMethodField()
+    region_count = serializers.SerializerMethodField()
 
     class Meta:
         model = CountryEntry
         fields = [
             'id', 'country', 'country_id', 'status', 'status_display',
-            'visited_at', 'notes', 'item_count', 'created_at', 'updated_at',
+            'visited_at', 'notes', 'item_count', 'region_count','created_at', 'updated_at',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def get_item_count(self, obj):
         return obj.items.count()
+
+    def get_region_count(self, obj):
+        return obj.regions.count()
 
     def validate(self, data):
         user = self.context['request'].user
