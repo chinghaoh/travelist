@@ -101,3 +101,37 @@ class TravelItem(models.Model):
     def __str__(self):
         status = 'done' if self.is_done else 'pending'
         return f"[{self.get_category_display()}] {self.name} ({status})"
+
+
+class CurrencyRate(models.Model):
+    code = models.CharField(max_length=10)
+    name = models.CharField(max_length=100)
+    base = models.CharField(max_length=10, default='EUR')
+    rate = models.FloatField()
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"1 {self.base} = {self.rate} {self.code}"
+
+
+class Photo(models.Model):
+    country_entry = models.ForeignKey(
+        CountryEntry,
+        on_delete=models.CASCADE,
+        related_name='photos',
+        null=True,
+        blank=True
+    )
+    region = models.ForeignKey(
+        Region,
+        on_delete=models.SET_NULL,
+        related_name='photos',
+        null=True,
+        blank=True
+    )
+    title = models.CharField(max_length=200, blank=True)
+    image_key = models.CharField(max_length=500)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.title or 'Photo'} - {self.country_entry}"

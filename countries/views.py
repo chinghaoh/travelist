@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import generics, filters, status
 from rest_framework.views import APIView
 from django.core.cache import cache
@@ -5,17 +6,20 @@ from .tasks import country_visited_task
 import requests
 from rest_framework import status
 from rest_framework.response import Response
-
-
-from .models import Country, CountryEntry, TravelItem, Region
+from django.conf import settings
+from .models import Country, CountryEntry, TravelItem, Region,Photo,CurrencyRate
 from .serializers import (
     CountrySerializer,
     CountryEntrySerializer,
     CountryEntryDetailSerializer,
     TravelItemSerializer,
     RegionSerializer,
-    RegionDetailSerializer
+    RegionDetailSerializer,
+    PhotoSerializer,
+    CurrencyRateSerializer
 )
+from .services.s3 import upload_photo, delete_photo
+
 
 class CountryListView(generics.ListAPIView):
     """
@@ -285,3 +289,91 @@ class RegionFetchBoundaryView(generics.GenericAPIView):
         region.save()
 
         return Response({'boundary': boundary})
+
+
+class PhotoView(APIView):
+
+    def get(self, request):
+        """Get all photos, optionally filtered by country_entry or region."""
+        country_entry_id = request.query_params.get('country_entry')
+        region_id = request.query_params.get('region')
+
+        photos = Photo.objects.all().order_by('-uploaded_at')
+
+        if country_entry_id:
+            photos = photos.filter(country_entry_id=country_entry_id)
+        if region_id:
+            photos = photos.filter(region_id=region_id)
+
+        serializer = PhotoSerializer(photos, many=True)
+        return Response(serializer.data)
+
+
+    def post(self,request):
+        """Upload a new photo to S3 and save to DB."""
+        file = request.FILES.get('image')
+        if not file:
+            return Response({'error': 'No image provided'}, status=400)
+
+        allowed_types = ['image/jpeg', 'image/png', 'image/webp']
+        if file.content_type not in allowed_types:
+            return Response({'error': 'Invalid file type. Use JPEG, PNG or WebP'}, status=400)
+
+        if file.size > 5 * 1024 * 1024:
+            return Response({'error': 'File too large. Max size is 5MB'}, status=400)
+
+        ext = file.name.split('.')[-1]
+        key = f"photos/{uuid.uuid4()}.{ext}"
+
+        upload_photo(file, key)
+
+        photo = Photo.objects.create(
+            image_key=key,
+            title=request.data.get('title', ''),
+            country_entry_id=request.data.get('country_entry') or None,
+            region_id=request.data.get('region') or None,
+        )
+
+        serializer = PhotoSerializer(photo)
+        return Response(serializer.data, status=201)
+
+    def delete(self, request, pk):
+        """Delete a photo from S3 and DB."""
+        try:
+            photo = Photo.objects.get(pk=pk)
+        except Photo.DoesNotExist:
+            return Response({'error': 'Photo not found'}, status=404)
+
+        delete_photo(photo.image_key)
+
+        photo.delete()
+        return Response(status=204)
+
+# class CurrencyRateView(APIView):
+#     def get(self, request):
+#         existing = CurrencyRate.objects.first()
+#         base = existing.base if existing else 'EUR'
+#
+#         if not existing:
+#             fetch_and_store_rates(
+#                 api_key=settings.EXCHANGERATE_API_KEY,
+#                 base=base
+#             )
+#
+#         rates = CurrencyRate.objects.filter(base=base).order_by('code')
+#         serializer = CurrencyRateSerializer(rates, many=True)
+#         return Response(serializer.data)
+#
+#     def post(self, request):
+#         base = request.data.get('base', 'EUR').upper()
+#
+#         CurrencyRate.objects.all().delete()
+#
+#         fetch_and_store_rates(
+#             api_key=settings.EXCHANGERATE_API_KEY,
+#             base=base
+#         )
+#
+#         rates = CurrencyRate.objects.filter(base=base).order_by('code')
+#         serializer = CurrencyRateSerializer(rates, many=True)
+#         return Response(serializer.data)

@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import Country, CountryEntry, TravelItem, Region
+from .models import Country, CountryEntry, TravelItem, Region , CurrencyRate, Photo
+from .services.s3 import get_presigned_url
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -97,3 +98,19 @@ class CountryEntryDetailSerializer(CountryEntrySerializer):
 
     class Meta(CountryEntrySerializer.Meta):
         fields = CountryEntrySerializer.Meta.fields + ['items', 'regions']
+
+
+class CurrencyRateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CurrencyRate
+        fields = ['code', 'name', 'base', 'rate', 'updated_at']
+
+class PhotoSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    class Meta:
+        model = Photo
+        fields = ['id', 'title', 'image_key', 'url', 'country_entry', 'region', 'uploaded_at']
+        read_only_fields = ['id', 'url', 'uploaded_at']
+
+    def get_url(self, obj):
+        return get_presigned_url(obj.image_key)

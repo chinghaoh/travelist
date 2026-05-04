@@ -26,4 +26,8 @@ urlpatterns = [
     path('items/', views.RecentItemsView.as_view(), name='item-list-all'),
     path('items/<int:pk>/', views.TravelItemDetailView.as_view(), name='item-detail'),
 
+    # Photos within a country entry
+    path('photos/', views.PhotoView.as_view(), name='photo-list'),
+    path('photos/<int:pk>/', views.PhotoView.as_view(), name='photo-detail'),
+
 ]
