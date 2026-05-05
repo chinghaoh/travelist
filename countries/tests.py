@@ -10,7 +10,6 @@ from .models import Photo,Region, TravelItem
 class CountryEntrySecurityTest(TestCase):
 
     def setUp(self):
-        # User 1
         self.user1 = User.objects.create_user(
             username='user1',
             password='testpass'
@@ -20,7 +19,6 @@ class CountryEntrySecurityTest(TestCase):
             name='test-key-1'
         )
 
-        # User 2
         self.user2 = User.objects.create_user(
             username='user2',
             password='testpass'
@@ -37,14 +35,12 @@ class CountryEntrySecurityTest(TestCase):
             numeric_code='392'
         )
 
-        # Entry belongs to user1
         self.entry = CountryEntry.objects.create(
             country=self.country,
             status='visited',
             user=self.user1
         )
 
-        # Client authenticated as user2
         self.api_client = APIClient()
         self.api_client.credentials(HTTP_AUTHORIZATION=f'Api-Key {self.api_key2.key}')
 
