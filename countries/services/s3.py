@@ -1,4 +1,5 @@
 import boto3
+from botocore.config import Config
 from django.conf import settings
 
 def get_s3_client():
@@ -7,8 +8,8 @@ def get_s3_client():
         aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
         aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
         region_name=settings.AWS_S3_REGION_NAME,
+        endpoint_url=f'https://s3.{settings.AWS_S3_REGION_NAME}.amazonaws.com',
     )
-
 def upload_photo(file,key):
     client = get_s3_client()
     client.upload_fileobj(
